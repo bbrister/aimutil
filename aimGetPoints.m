@@ -10,16 +10,43 @@ end
 % Add jjvector to the path
 addpath(jjPath());
 
-% Get the annotation coordinates (from jjvector)
+% Set up the XML parser
 xmlDoc = parseXML(aimName);
-xml_filter{1} = 'geometricShapeCollection';
-xml_filter{2} = 'GeometricShape';
-xml_filter{3} = 'spatialCoordinateCollection';
-xml_filter{4} = 'SpatialCoordinate';
-x = parseDoc(xmlDoc, xml_filter, 'x', 0);
-y = parseDoc(xmlDoc, xml_filter, 'y', 0);
+baseFilter = {
+    'imageAnnotations'
+    'ImageAnnotation'
+    'markupEntityCollection'
+    'MarkupEntity'
+    };
+xyFilter = [
+    baseFilter
+    {
+    'geometricShapeCollection'
+    'GeometricShape'
+    'spatialCoordinateCollection'
+    'SpatialCoordinate'
+    'twoDimensionSpatialCoordinateCollection'
+    'TwoDimensionSpatialCoordinate'
+    }
+    ];
+
+% Look for attributes 'x' and 'y'
+x = parseDoc(xmlDoc, xyFilter, 'x', false);
+y = parseDoc(xmlDoc, xyFilter, 'y', false);
+
+% Look for classes named 'x' and 'y' with attribute 'value'
+x = [x parseDoc(xmlDoc, [xyFilter; {'x'}], 'value', false)];
+y = [y parseDoc(xmlDoc, [xyFilter; {'y'}], 'value', false)];
+
+% Get the slice index
+z = parseDoc(xmlDoc, [baseFilter; {'referencedFrameNumber'}], 'value', 0);
+
+% Check dimensions
 assert(all(size(x) == size(y)));
-points = [x y];
+if isscalar(z)
+    z = repmat(z, size(x));
+end
+points = [x y z];
 
 % Restore the path
 rmpath(jjPath());
