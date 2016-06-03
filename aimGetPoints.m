@@ -1,6 +1,6 @@
 function points = aimGetPoints(aimName)
-%aimGetPoints Return an [mx2] vector of the points demarcing an AIM
-%annotation.
+% aimGetPoints Return an [mx2] vector of the points demarcing an AIM
+% annotation.
 
 % Verify inputs
 if (nargin < 1 || isempty(aimName))
@@ -38,15 +38,8 @@ y = parseDoc(xmlDoc, xyFilter, 'y', false);
 x = [x parseDoc(xmlDoc, [xyFilter; {'x'}], 'value', false)];
 y = [y parseDoc(xmlDoc, [xyFilter; {'y'}], 'value', false)];
 
-% Get the slice index
-z = parseDoc(xmlDoc, [baseFilter; {'referencedFrameNumber'}], 'value', 0);
-
-% Check dimensions
-assert(all(size(x) == size(y)));
-if isscalar(z)
-    z = repmat(z, size(x));
-end
-points = [x y z];
+% Form the output matrix
+points = [x y];
 
 % Restore the path
 rmpath(jjPath());
