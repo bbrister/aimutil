@@ -1,6 +1,7 @@
-function [pts, mask] = dcmGetMintLesionROI(dirName, lesion, im, units)
+function [pts, mask, maskVol] = dcmGetMintLesionROI(dirName, lesion, ...
+    im, units)
 % Convert the lesion annotation to image space, loading the image if it's
-% not provided. mask is a 2D slice--use pts to the get 3D index.
+% not provided. mask is a 2D slice--use pts to get the 3D index.
 
 % Load the image if it wasn't provided
 if nargin < 4
@@ -15,7 +16,7 @@ end
 tform = diag(lesion.matIm2mm);
 
 % Make sure the xy tranformation matches the units
-if ~isequal(units(1:2), abs(tform(1:2)))
+if norm(units(1:2) - abs(tform(1:2))) > 1e-2;
     error('Transformation matrix does not match the units!')
 end
 
@@ -47,6 +48,12 @@ end
 % Form the final indices
 pts = [xyReflectIdx repmat(zIdx, [size(xyReflectIdx, 1) 1])];
 
+% Early termination
+if nargout < 2
+    mask = [];
+    return
+end
+
 % Draw the binary image mask
 switch lower(lesion.type)
     case 'polygon'
@@ -62,5 +69,15 @@ switch lower(lesion.type)
     otherwise
         error(['Unrecognnized drawing type: ' lesion.type])
 end
+
+% Optionally convert the mask to a volume
+if nargout < 3
+    maskVol = [];
+    return
+end
+z = pts(1, 3);
+assert(all(pts(:, 3) == z))
+maskVol = false(size(im));
+maskVol(:, :, z) = mask';
 
 end
