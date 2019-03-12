@@ -24,7 +24,13 @@ for k = 1 : numFiles
     end
     
     % Get the acquisition number
-    info = dicominfo(filename);
+    try
+        info = dicominfo(filename);
+    catch ME
+        warning(getReport(ME))
+        warning(['Skipping file ' filename '...'])
+        continue
+    end
     if isfield(info, 'AcquisitionNumber')
         accNums(k) = info.AcquisitionNumber;
     end
