@@ -1,9 +1,14 @@
 function mask = ballMask(siz, center, radius, units)
-% Make an ball mask with the desired center and radius
+% Make an ball mask with the desired center and radius. center and radius 
+% are in physical coordinates given by 'units'.
 
 if nargin < 4 || isempty(units)
-    units = [1 1 1];
+    units = ones(size(siz));
 end
+
+% Make the inputs into row vectors
+center = makeRow(center);
+units = makeRow(units);
 
 % Normalize the center, in mm
 nCenter = center .* units;
@@ -26,5 +31,19 @@ switch dim
         error(['Unsupported dimensionality: ' num2str(dim)])
 end
 
+end
+
+function row = makeRow(vec)
+
+if ~isvector(vec)
+    error('expected vector')
+end
+
+if iscolumn(vec)
+    row = vec';
+else
+    row = vec;
+end
+    
 end
 
