@@ -19,11 +19,11 @@ vol = data_nii.get_data()
 # Read nifti 2 
 header_nii = nib.load(header_nii_path)
 affine = header_nii.affine
-hdr = header_nii.hdr
+header = header_nii.header
 
 # Convert nifti 1 to the dtype of nifti 2
 vol = vol.astype(header_nii.get_data().dtype)
 
 # Write over nifti 1
-nii_out = nib.Nifti1Image(vol, affine, header=hdr)
+nii_out = nib.Nifti1Image(vol, affine, header=header)
 nib.save(nii_out, data_nii_path)
