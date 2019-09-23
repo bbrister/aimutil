@@ -12,7 +12,17 @@ end
 % Get the z-coordinates of all the dicom files
 zCoords = zeros(numFiles, 1);
 for i = 1 : numFiles
-    info = dicominfo(fullfile(dirName, dcmFiles(i).name));
+
+    % Check if the file exists. It could be a broken link.
+    dcmName = fullfile(dirName, dcmFiles(i).name); 
+    if ~exist(dcmName, 'file')
+        warning(['File ' dcmNmae ' does not exist! Could be a broken '...
+            'symlink'])
+        zCoords(i) = nan;
+        continue
+    end
+    
+    info = dicominfo(dcmName);
     zCoords(i) = info.ImagePositionPatient(3);
     
     if i == 1
@@ -20,6 +30,13 @@ for i = 1 : numFiles
     elseif info.SliceThickness ~= sliceThickness
         error(['Inconsistent slice thickness in directory' dirName])
     end
+end
+
+% Check if there are any valid files
+if all(isnan(zCoords))
+    ME = MException('aimutil:noFiles', ...
+        'No valid files found!');
+    throw(ME)
 end
 
 % Find the closest one
