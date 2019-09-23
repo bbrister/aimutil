@@ -1,12 +1,6 @@
-function [pts, mask, maskVol] = dcmGetMintLesionROI(dirName, lesion, ...
-    im, units)
+function [pts, mask, slice] = dcmGetMintLesionROI(dirName, lesion)
 % Convert the lesion annotation to image space, loading the image if it's
 % not provided. mask is a 2D slice--use pts to get the 3D index.
-
-% Load the image if it wasn't provided
-if nargin < 4
-    [im, units] = imRead3D(dirName);
-end
 
 % Make sure the transformation is diagonal (otherwise I don't know what to
 % do!)
@@ -15,38 +9,44 @@ if ~isdiag(lesion.matIm2mm(1:3, 1:3))
 end
 tform = diag(lesion.matIm2mm);
 
-% Make sure the xy tranformation matches the units
-if norm(units(1:2) - abs(tform(1:2))) > 1e-2;
-    error('Transformation matrix does not match the units!')
-end
-
 % Extract the z coordinate
 zWorld = lesion.matIm2mm(3, 4);
 
 % Get the corresponding dicom image
-dcmName = dcmGetSliceFromCoord(zWorld, dirName);
+try
+    dcmName = dcmGetSliceFromCoord(zWorld, dirName); % Throws aimutil:noFiles
+catch ME
+    if ~strcmp(ME.identifier, 'aimutil:noFiles')
+        
+    else
+       rethrow(ME) 
+    end
+end
 slice = imRead3D(dcmName);
 
-% Find the image position in the series
-zIdx = sliceGetZ(slice, im);
+% Get the X-Y units from the dicom image
+[~, units] = imRead3D(dcmName);
+unitsXY = units(1:2);
+clear units
+
+% Make sure the xy tranformation matches the units
+if norm(unitsXY - abs(tform(1:2))) > 1e-2
+    error('Transformation matrix does not match the units!')
+end
 
 % Find the x and y indices of each control point, convert to indices
 xyWorld = lesion.pointsMm;
-xyIdx = bsxfun(@times, xyWorld, 1 ./ units(1 : 2)');
+xyIdx = bsxfun(@times, xyWorld, 1 ./ unitsXY');
 
 % Reflect each axis if it's specified in the transformation matrix
-xyReflectIdx = zeros(size(xyIdx));
-assert(ndims(im) == 3)
+pts = zeros(size(xyIdx));
 for i = 1 : 2
     if lesion.matIm2mm(i, i) < 0
-        xyReflectIdx(:, i) = size(im, i) - xyIdx(:, i);
+        pts(:, i) = size(slice, i) - xyIdx(:, i);
     else
-        xyReflectIdx(:, i) = xyIdx(:, i);
+        pts(:, i) = xyIdx(:, i);
     end
 end
-
-% Form the final indices
-pts = [xyReflectIdx repmat(zIdx, [size(xyReflectIdx, 1) 1])];
 
 % Early termination
 if nargout < 2
@@ -57,12 +57,13 @@ end
 % Draw the binary image mask
 switch lower(lesion.type)
     case 'polygon'
-        mask = poly2mask(pts(:, 1), pts(:, 2), size(im, 1), size(im, 2));
+        mask = poly2mask(pts(:, 1), pts(:, 2), size(slice, 1), ...
+            size(slice, 2));
     case 'circle'
         assert(size(pts, 1) == 2)
         center = fliplr(mean(pts(:, 1:2))) + 1;
         radius = norm(pts(1, 1:2) - pts(2, 1:2)) / 2;
-        mask = ballMask([size(im, 1) size(im, 2)], center, radius);
+        mask = ballMask([size(slice, 1) size(slice, 2)], center, radius);
     case 'cross'
         mask = bwconvhull(poly2mask(pts(:, 1), pts(:, 2), size(im, 1), ...
             size(im, 2)));
@@ -70,14 +71,7 @@ switch lower(lesion.type)
         error(['Unrecognnized drawing type: ' lesion.type])
 end
 
-% Optionally convert the mask to a volume
-if nargout < 3
-    maskVol = [];
-    return
-end
-z = pts(1, 3);
-assert(all(pts(:, 3) == z))
-maskVol = false(size(im));
-maskVol(:, :, z) = mask';
+% Flip the mask at the end--to handle Matlab vs. SIFT3D conventions
+mask = mask';
 
 end
