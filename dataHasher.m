@@ -10,9 +10,9 @@ classdef dataHasher < handle
        end
        
        function tf = hasData(self, inString)
-           % Check if the corresponding input data is in the hash tabl.
+           % Check if the corresponding input data is in the hash table.
           filename = self.getFilename(inString);
-          tf = exist(filename, 'file');
+          tf = isfile(filename);
        end
        
        function data = get(self, inString)

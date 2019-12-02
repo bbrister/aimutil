@@ -33,6 +33,11 @@ classdef registrationHolder < handle
             end
         end
         
+        function [im, units] = getImage(self, name)
+            % Retireve image data from the underlying imageHolder
+           [im, units] = self.images.get(name); 
+        end
+        
         function [keys, desc, coords] = getSift(self, name)
             % Run SIFT on an image, unless it was already done, in which
             % case return the result.

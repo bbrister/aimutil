@@ -65,8 +65,8 @@ switch lower(lesion.type)
         radius = norm(pts(1, 1:2) - pts(2, 1:2)) / 2;
         mask = ballMask([size(slice, 1) size(slice, 2)], center, radius);
     case 'cross'
-        mask = bwconvhull(poly2mask(pts(:, 1), pts(:, 2), size(im, 1), ...
-            size(im, 2)));
+        mask = bwconvhull(poly2mask(pts(:, 1), pts(:, 2), ...
+            size(slice, 1), size(slice, 2)));
     otherwise
         error(['Unrecognnized drawing type: ' lesion.type])
 end
