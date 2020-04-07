@@ -1,4 +1,4 @@
-function plotSegmentation(im, pred, gt)
+function rendered = plotSegmentation(im, pred, gt)
 % Plot a 2D segmentation with the image, prediction and ground truth masks
 
 % Parameters
