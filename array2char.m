@@ -10,7 +10,7 @@ X = X - offset;
 scale = 65535 / max(X(:));
 X = X * scale;
 
-% Convertsion
+% Conversion
 Xenc = char(X);
 
 end

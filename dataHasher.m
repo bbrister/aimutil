@@ -4,6 +4,12 @@ classdef dataHasher < handle
       mDirname
    end
    
+   methods(Static = true)
+       function hashString = hash(inString)
+          hashString = char(mlreportgen.utils.hash(inString)); 
+       end
+   end
+   
    methods
        function self = dataHasher(dirname)
           self.mDirname = dirname;
@@ -35,10 +41,6 @@ classdef dataHasher < handle
        function filename = getFilename(self, inString)
            hashString = self.hash(inString);
            filename = fullfile(self.mDirname, [hashString '.mat']);
-       end
-       
-       function hashString = hash(self, inString)
-          hashString = char(mlreportgen.utils.hash(inString)); 
        end
    end
 end
