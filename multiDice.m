@@ -1,5 +1,5 @@
-function score = dice(X, Y, numClasses)
-% Compute the dice score between two arrays
+function score = multiDice(X, Y, numClasses)
+% Compute the dice score between two arrays of class labels
 
 % Verify inputs
 maxClass = numClasses - 1;
