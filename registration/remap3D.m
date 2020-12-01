@@ -1,21 +1,26 @@
-function [warped, coordMap] = remap3D(warpedCoords, im, siz, interp)
-% As invAffine3D, but applies an [MxNxPx3] remapping
+function warped = remap3D(coordMap, im, interp)
+% As invAffine3D, but applies an [MxNxPx3] remapping. coordMap comes from 
+% computeCoordMap(), which takes in the desired output size.
 
 % Default parameters
 if nargin < 4 || isempty(interp)
    interp = 'linear'; 
 end
 
-% Warp the images
-Xp = warpedCoords(1, :) + 1;
-Yp = warpedCoords(2, :) + 1;
-Zp = warpedCoords(3, :) + 1;
-warped = reshape(interp3(im, Yp, Xp, Zp, interp, 0), siz);
+% Reshape the coordinates to linear indices
+Xp = extractCoordVec(coordMap, 1);
+Yp = extractCoordVec(coordMap, 2);
+Zp = extractCoordVec(coordMap, 3);
+outSiz = [size(coordMap, 1) size(coordMap, 2) size(coordMap, 3)];
 
-% Save the coordinate map
-coordMap = zeros([siz 3]);
-for i = 1 : 3
-    coordMap(:, :, :, i) = reshape(warpedCoords(i, :), siz);
+% Warp the image
+warped = reshape(interp3(im, Yp, Xp, Zp, interp, 0), outSiz);
+
 end
+
+function coordVec = extractCoordVec(coordMap, dim)
+
+coordVec = coordMap(:, :, :, dim) + 1;
+coordVec = reshape(coordVec, [numel(coordVec) 1]);
 
 end

@@ -16,8 +16,24 @@ assert(ndims(im) == 3)
 
 % Optional masking
 if nargin > 4 && ~isempty(maskVal)
-    % Compute a bounding cube around the input mask
-    [X, Y, Z] = ind2sub(size(im), find(im ~= maskVal));
+    % Extract the foreground using the mask value
+    fgInds = find(im ~= maskVal);
+    if isempty(fgInds)
+        % If the image has only one value, just return that
+        warning(['Image is completely masked by value ' ...
+            num2str(maskVal)])
+        warped = zeros(siz);
+        warped(:) = maskVal;
+        
+        % Compute the correct coordinate mapping, if requested
+        if nargout >= 2
+            coordMap = computeCoordMap(A, siz);
+        end
+        return 
+    end
+    
+    % Compute a bounding cube around the foreground
+    [X, Y, Z] = ind2sub(size(im), fgInds);
     bounds = coordsMinMax([X Y Z]);
     minInMask = bounds(1, :);
     maxInMask = bounds(2, :);
@@ -71,10 +87,9 @@ if nargin > 4 && ~isempty(maskVal)
    return
 end
 
-[Y, X, Z] = meshgrid(1 : siz(2), 1 : siz(1), 1 : siz(3));
-coords = [X(:) Y(:) Z(:)]' - 1;
-warpedCoords = A * [coords; ones(1, size(coords, 2))];
-[warped, coordMap] = remap3D(warpedCoords, im, siz, interp);
+% Interpolate
+coordMap = computeCoordMap(A, siz);
+warped = remap3D(coordMap, im, interp);
 
 end
 
