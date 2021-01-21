@@ -43,7 +43,9 @@ end
 zDists = abs(zCoords - z);
 minZDist = min(zDists);
 if minZDist > sliceThickness
-    error(['Failed to find a z-coordinate in directory ' dirName])
+    ME = MException('aimutil:noMatchingZ', ...
+        ['Failed to find a matching z-coordinate in directory ' dirName])
+    throw(ME)
 end
 
 matches = find(zDists == minZDist);
