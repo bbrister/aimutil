@@ -3,6 +3,15 @@ function [dist, Aidx, Bidx] = setProjection(siz, Ainds, Binds)
 % onto Binds. The pair (Aidx, Bidx) gives the nearest matching pair, which
 % of course may not be unique.
 
+% Check for empty sets
+if isempty(Binds)
+    warning('Received empty set. Returning inf')
+    dist = inf;
+    Aidx = [];
+    Bidx = [];
+    return 
+end
+
 % Convert to subscripts
 ndim = length(siz);
 [Asubs{1:ndim}] = ind2sub(siz, Ainds);
