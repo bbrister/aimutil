@@ -8,6 +8,14 @@ classdef nnHasher < dataHasher
             hashStr = dataHasher.hash(imageStr);
         end
         
+        function hashStr = hashFile(filename)
+           % Hash a binary file. For example, the network .pb file
+           fid = fopen(filename);
+           data = convertCharsToStrings(char(fread(fid)'));
+           fclose(fid);
+           hashStr = dataHasher.hash(data);
+        end
+        
         function inString = getInString(image, units, nnString)
             % Identifies the input by image, units, and a
             % string giving the info about the neural network.
