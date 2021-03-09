@@ -1,6 +1,7 @@
 function mask = ballMask(siz, center, radius, units)
-% Make an ball mask with the desired center and radius. center and radius 
-% are in physical coordinates given by 'units'.
+%ballMask(siz, center, radius, units), Make an ball mask with the desired 
+% center and radius. center and radius are in physical coordinates given by 
+% 'units'.
 
 if nargin < 4 || isempty(units)
     units = ones(size(siz));
