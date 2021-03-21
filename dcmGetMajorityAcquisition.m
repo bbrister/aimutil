@@ -32,7 +32,9 @@ for k = 1 : numFiles
         continue
     end
     if isfield(info, 'AcquisitionNumber')
-        accNums(k) = info.AcquisitionNumber;
+        if ~isempty(info.AcquisitionNumber)
+            accNums(k) = info.AcquisitionNumber;
+        end
     end
     filenames{k} = filename;
     infos{k} = info;
@@ -50,6 +52,9 @@ uniqueAccs = uniqueAccs(~isnan(uniqueAccs));
 if length(uniqueAccs) < 2
     return
 end 
+
+warning(['Found multiple acquisitions in ' dirName ...
+    ', taking the majority...'])
 
 % Count the acquisition numbers, find the majority
 counts = histc(accNums, uniqueAccs);

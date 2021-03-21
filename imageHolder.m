@@ -29,8 +29,14 @@ classdef imageHolder < handle
                 return
             end
             
-            % Read the image
-            [im, units] = imRead3D(path);
+            % Read the image, using the majority acquisition
+            try
+                [im, units] = dcmReadFiles(dcmGetMajorityAcquisition(path));
+            catch ME
+               warning(['Received an error reading image from ' path ...
+                   '...']) 
+               rethrow(ME)
+            end
             
             % Add the image to the list
             self.paths{end + 1} = path;
