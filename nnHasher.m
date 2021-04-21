@@ -10,7 +10,17 @@ classdef nnHasher < dataHasher
         
         function hashStr = hashFile(filename)
            % Hash a binary file. For example, the network .pb file
+           
+           % Check for the existence of the file
+           if ~exist(filename, 'file')
+                throw(MException('aimutil:fileNotFound', ...
+                    ['File ' filename ' does not exist']))
+           end
+           
            fid = fopen(filename);
+           if fid < 0
+               error(['Error reading file ' filename])
+           end
            data = convertCharsToStrings(char(fread(fid)'));
            fclose(fid);
            hashStr = dataHasher.hash(data);
