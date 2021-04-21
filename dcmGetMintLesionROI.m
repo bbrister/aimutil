@@ -57,6 +57,13 @@ end
 % Draw the binary image mask
 switch lower(lesion.type)
     case 'polygon'
+        % Check if the shape self-intersects
+        if checkSelfIntersection(pts(:, 1), pts(:, 2))
+            throw(MException('aimutil:selfIntersectingPolygon', ...
+                'Polygon intersects itself'))
+        end
+        
+        % Draw the mask
         mask = poly2mask(pts(:, 1), pts(:, 2), size(slice, 1), ...
             size(slice, 2));
     case 'circle'
