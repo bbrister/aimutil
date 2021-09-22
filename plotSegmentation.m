@@ -2,9 +2,8 @@ function rendered = plotSegmentation(im, pred, gt)
 % Plot a 2D segmentation with the image, prediction and ground truth masks
 
 % Parameters
-gtColor = [0 0 255];
-predColor = [255 0 0];
-opacity = 0.5;
+gtColor = [5 231 252] / 255;
+predColor = [252 41 22] / 255;
 
 % Convert the image to RGB
 imColor = zeros([size(im) 3]);
@@ -24,22 +23,33 @@ end
 function overlaid = addBorderOverlay(im, mask, maskColor)
 % Like addOverlay, but opaque border
    
-opacity = 1.0;
+% Avoid NaNs if empty
+if ~any(mask(:))
+    overlaid = im;
+    return
+end
 
+opacity = 0.9;
+aaSigma = 1.25;
+
+% Get the border
 maskBorder = bwperim(mask);
-overlaid = addOverlay(im, maskBorder, maskColor, opacity);
+
+% Apply anti-aliasing and opacity
+maskAA = imgaussfilt(single(maskBorder), aaSigma);
+maskOpacity = maskAA * opacity / max(maskAA(:));
+
+overlaid = addOverlay(im, maskOpacity, maskColor);
 
 end
 
-function overlaid = addOverlay(im, mask, maskColor, opacity)
+function overlaid = addOverlay(im, mask, maskColor)
+% Uses a mask with opacity in [0, 1]
 
     % Apply the blend
     overlaid = zeros(size(im));
     for c = 1 : size(im, 3)
         imChannel = im(:, :, c);
-        opacityColor = maskColor(c) * opacity;
-        overlayChannel = imChannel;
-        overlayChannel(mask) = overlayChannel(mask) * (1 - opacity) + opacityColor;
-        overlaid(:, :, c) = overlayChannel;
+        overlaid(:, :, c) = imChannel .* (1 - mask) + mask * maskColor(c);
     end
 end
