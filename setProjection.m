@@ -4,7 +4,7 @@ function [dist, Aidx, Bidx] = setProjection(siz, Ainds, Binds)
 % of course may not be unique.
 
 % Check for empty sets
-if isempty(Binds)
+if isempty(Ainds) || isempty(Binds)
     warning('Received empty set. Returning inf')
     dist = inf;
     Aidx = [];
