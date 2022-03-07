@@ -1,7 +1,15 @@
-function [dist, Aidx, Bidx] = setProjection(siz, Ainds, Binds)
+function [dist, Aidx, Bidx] = setProjection(siz, Ainds, Binds, units)
 % In a binary array of size 'siz', find the projection of the set Ainds
 % onto Binds. The pair (Aidx, Bidx) gives the nearest matching pair, which
 % of course may not be unique.
+%
+% If 'units' is specified, performs an isotropic transform before taking
+% the distance.
+
+% Default units
+if nargin < 4 || isempty(units)
+    units = ones(size(siz));
+end
 
 % Check for empty sets
 if isempty(Ainds) || isempty(Binds)
@@ -11,6 +19,39 @@ if isempty(Ainds) || isempty(Binds)
     Bidx = [];
     return 
 end
+
+% Check for intersection, to speed up computation
+intersection = intersect(Ainds, Binds);
+if ~isempty(intersection)
+    Aidx = intersection(1);
+    Bidx = Aidx;
+    dist = 0;
+    return
+end
+
+% Normalize 'units' so their minimum is 1 voxel
+normFactor = min(units(:));
+normUnits = units / normFactor;
+
+% Convert the size and indices using the units
+[normAinds, normSiz] = remapInds(Ainds, siz, normUnits);
+[normBinds, normSiz2] = remapInds(Binds, siz, normUnits);
+assert(isequal(normSiz, normSiz2));
+
+% Run the helper function, which doesn't know about units
+[normDist, normAidx, normBidx] = setProjectionHelper(normSiz, normAinds, normBinds);
+
+% Normalize the returns back to the orginal units
+dist = normDist * normFactor;
+Aidx = Ainds(normAinds == normAidx);
+Bidx = Binds(normBinds == normBidx);
+assert(length(Aidx) == 1)
+assert(length(Bidx) == 1)
+
+end
+
+
+function [dist, Aidx, Bidx] = setProjectionHelper(siz, Ainds, Binds)
 
 % Convert to subscripts
 ndim = length(siz);
@@ -73,5 +114,33 @@ for d = 1 : ndim
     bounds(1, d) = min(dimCoords);
     bounds(2, d) = max(dimCoords);
 end
+
+end
+
+function [newInds, newSiz] = remapInds(inds, siz, units)
+% Remap the indices using the specified units
+
+if isempty(inds)
+    newInds = [];
+    return
+end
+
+% Ensure 'siz' and 'units' are both row vectors
+if size(siz) ~= size(units)
+    units = units';
+end
+
+assert(length(siz) <= 3)
+[X, Y, Z] = ind2sub(siz, inds);
+X = ceil(X * units(1));
+if length(units) >= 2
+    Y = ceil(Y * units(2));
+end
+if length(units) >= 3
+    Z = ceil(Z * units(3));
+end
+
+newSiz = ceil(siz .* units);
+newInds = sub2ind(newSiz, X, Y, Z);
 
 end
